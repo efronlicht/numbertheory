@@ -7,6 +7,14 @@ fn test_primes_under() {
 }
 
 #[test]
+fn test_primes_first_n() {
+    let got = Primes::first_n(5);
+    let want = Primes::under(12);
+    assert_eq!(want,got);
+    
+}
+
+#[test]
 fn test_factors() {
     let got = factors(8 * 3, &Primes::under(12));
     let want = Some(hashmap!{2 => 3, 3 => 1});
@@ -42,3 +50,4 @@ fn test_lcm() {
 
     assert_eq!(lcm(23, 5, &p), None); // 23 is larger than our largest prime 
 }
+

@@ -20,7 +20,7 @@ impl Primes {
         }
     }
 
-    ///create a Primes representing all primes under 'max' using the sieve of Eratosthenes.
+    ///create a Primes representing all primes under 'max'. this is not an efficient implementation.
     pub fn under(max: u64) -> Self {
         let mut primes = Primes(Vec::new());
         if max < 2 {
@@ -45,6 +45,31 @@ impl Primes {
         }
         primes
     }
+    /// create the first n Primes. this is not an efficient implementation.
+    pub fn first_n(size: usize) -> Self {
+        let mut primes = Primes(Vec::new());
+        if size == 0 {
+            return primes
+        }
+        primes.0.push(2);
+        let mut m = 3;
+        while primes.0.len() < size {
+            let mut isprime = true;
+            for p in &primes.0 {
+                if m % p == 0 {
+                    isprime = false;
+                    break;
+                }
+            }
+            if isprime {
+                primes.0.push(m);
+            }
+
+            m += 2
+
+        }
+        primes
+}
     
     ///convert a Vec<64> into Primes directly, without checking that they are actually prime.
     pub unsafe fn from_raw_vec(v: Vec<u64>) -> Self {Primes(v)}
