@@ -77,15 +77,18 @@ pub fn intersection(a: &Factors, b: &Factors) -> Factors {
 }
 ///gcd is the greatest common divisor.  that is, the largest d such that ad == m bd == n for some positive integers a, b
 pub fn gcd(m: u64, n: u64, primes: &Primes) -> Option<u64> {
-    if m == 0 || n == 0 {
-        return None;
+    match (m, n) {
+        (0, _) | (_, 0) => None,
+        (1, _) | (_, 1) => Some(1),
+        
+        (m, n) => {
+            let mut gcd = 1;
+            for (p, exp) in intersection(&factors(m, primes)?, &factors(n, primes)?) {
+                gcd *= p.pow(exp as u32);
+            }
+            Some(gcd)
+        }
     }
-    let intersection = intersection(&factors(n, primes)?, &factors(m, primes)?);
-    let mut gcd = 1;
-    for (p, exp) in intersection {
-        gcd *= p.pow(exp as u32);
-    }
-    Some(gcd)
 }
 
 //lcm is the least common multiple; that is, the smallest q such that a*m == q, b*n == q for some positive integers a, b
@@ -93,8 +96,10 @@ pub fn lcm(m: u64, n: u64, primes: &Primes) -> Option<u64> {
     match (m, n) {
         (0, 0) => Some(0), 
         (0, _) | (_, 0) => None, 
-        (m, n) => 
-        {
+        (m, 1) => Some(m),
+        (1, n) => Some(n),
+        
+        (m, n) => {
             let union = union(&factors(n, primes)?, &factors(m, primes)?);
             let mut lcm = 1;
             for (p, exp) in union {
@@ -107,23 +112,24 @@ pub fn lcm(m: u64, n: u64, primes: &Primes) -> Option<u64> {
 
 
 
-///find the prime factors of a positive integer, if any. 0 and 1 are considered to have no prime factorization.
+///find the prime factors of a positive integer, if any. 0 is considered to have no prime factorization. 1 is considered to have an empty prime factorization.
 pub fn factors(n: u64, primes: &Primes) -> Option<Factors> {
-    if n == 0 || n == 1 {
-        return None;
-    }
     let mut factors = Factors::new();
+    match n {
+        0 => return None,
+        1 => return Some(factors),
+        _ => {},
+    }
     let mut n = n;
-
     for p in &primes.0 {
         let p = *p;
         while n % p == 0 {
             *factors.entry(p).or_insert(0) += 1;
             n /= p;
-        }
+            }
         if p > n {
             return Some(factors); //we know the prime factorization for sure
-        }
+            }   
     }
-    None // n is larger than our largest known prime. it could be prime, but it could also be a sufficiently large composite number
+        None // n is larger than our largest known prime. it could be prime, but it could also be a sufficiently large composite number
 }
