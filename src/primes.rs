@@ -1,36 +1,37 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::collections;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 ///factors represents the prime factors of an integer. the key is the base, and the value is the exponent.
 ///we note that since (1<<64-1) < (2<<64) is the max u64, the maximum possible exponent we can store without going into
 ///variable-precision arithmetic is 62, so a u8 is fine for the exponent.
-pub struct Factors(HashMap<u64, u8>);
 
-
+///An assumed invariant is that all exponents are positive.
+pub struct Factors(BTreeMap<u64, u8>); // we use a BTreeMap since prime factorizations are explicitly ordered.
 
 impl Factors {
     ///find the prime factors of a positive integer, if any. 0 is considered to have no prime factorization. 1 is considered to have an empty prime factorization.
     pub fn of(n: u64, primes: &Primes) -> Option<Self> {
-        let mut factors = HashMap::new();
+        let mut factors = BTreeMap::new();
         match n {
-            0 => return None,
-            1 => return Some(Factors(factors)),
-            _ => {}
-        }
-        let mut n = n;
+            0 => None,
+            1 => Some(Factors(factors)),
+            _ => {
+                let mut n = n;
 
-        for p in &primes.0 {
-            let p = *p;
-            while n % p == 0 {
-                *factors.entry(p).or_insert(0) += 1;
-                n /= p;
-            }
-            if p > n {
-                return Some(Factors(factors)); //we know the prime factorization for sure
+                for p in &primes.0 {
+                    let p = *p;
+                    while n % p == 0 {
+                        *factors.entry(p).or_insert(0) += 1;
+                        n /= p;
+                    }
+                    if p > n {
+                        return Some(Factors(factors)); //we know the prime factorization for sure
+                    }
+                }
+                None // n is larger than our largest known prime. it could be prime, but it could also be a sufficiently large composite number
             }
         }
-        None // n is larger than our largest known prime. it could be prime, but it could also be a sufficiently large composite number
     }
 
     pub fn is_empty(&self) -> bool {
@@ -43,14 +44,14 @@ impl Factors {
         }
         Factors(product)
     }
-    
+
     pub fn totient(&self) -> u64 {
         if self.is_empty() {
             return 0;
         }
         let mut totient = 1;
         for (p, exp) in &self.0 {
-            totient *= p.pow(*exp as u32) - p.pow(*exp as u32 -1)
+            totient *= p.pow(*exp as u32) - p.pow(*exp as u32 - 1)
         }
         totient
     }
@@ -87,7 +88,7 @@ impl Factors {
 
 impl IntoIterator for Factors {
     type Item = (u64, u8);
-    type IntoIter = collections::hash_map::IntoIter<u64, u8>;
+    type IntoIter = collections::btree_map::IntoIter<u64, u8>;
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
@@ -100,14 +101,13 @@ impl Into<u64> for Factors {
     }
 }
 
-impl Into<HashMap<u64, u8>> for Factors {
-    fn into(self) -> HashMap<u64, u8> {
-        return self.0
+impl Into<BTreeMap<u64, u8>> for Factors {
+    fn into(self) -> BTreeMap<u64, u8> {
+        return self.0;
     }
 }
 
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 ///Primes represents a subset of the primes, starting with no gaps from the beginning of the positive integers, under a certain maximum.
 ///Valid Primes are [], [2, 3, 5], [2, 3, 5, 7, 11], but NOT [2, 5, 11].
 pub struct Primes(Vec<u64>);
@@ -200,7 +200,7 @@ pub fn union(a: &Factors, b: &Factors) -> Factors {
 
 pub fn intersection(a: &Factors, b: &Factors) -> Factors {
     let (a, b) = (&a.0, &b.0);
-    let mut intersection = HashMap::new();
+    let mut intersection = BTreeMap::new();
     for (k, v) in a {
         if b.contains_key(&k) {
             let min = v.min(&b[&k]);

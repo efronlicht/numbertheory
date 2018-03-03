@@ -1,5 +1,5 @@
 use super::primes::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 #[test]
 fn test_primes_under() {
     let got = Primes::under(12);
@@ -16,8 +16,8 @@ fn test_primes_first_n() {
 
 #[test]
 fn test_factors() {
-    let got: HashMap<u64, u8> = Factors::of(8 * 3, &Primes::under(12)).unwrap().into();
-    let want = hashmap!{2 => 3, 3 => 1};
+    let got: BTreeMap<u64, u8> = Factors::of(8 * 3, &Primes::under(12)).unwrap().into();
+    let want = btreemap!{2 => 3, 3 => 1};
     assert_eq!(got, want);
 }
 

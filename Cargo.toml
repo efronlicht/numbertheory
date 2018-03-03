@@ -1,6 +1,6 @@
 [package]
 name = "number_theory"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["efron_licht <efron.python@gmail.com>"]
 
 [dependencies]
